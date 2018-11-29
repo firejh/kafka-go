@@ -15,7 +15,7 @@ func TestBatchDontExpectEOF(t *testing.T) {
 		Resolver: &net.Resolver{},
 	}).LookupLeader(context.Background(), "tcp", "localhost:9092", topic, 0)
 	if err != nil {
-		t.Fatal("failed to open a new kafka connection:", err)
+		t.Fatal("failed to open a new gxkafka connection:", err)
 	}
 
 	nc, err := net.Dial("tcp", net.JoinHostPort(broker.Host, strconv.Itoa(broker.Port)))

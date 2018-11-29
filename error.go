@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-// Error represents the different error codes that may be returned by kafka.
+// Error represents the different error codes that may be returned by gxkafka.
 type Error int
 
 const (

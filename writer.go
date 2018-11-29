@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// The Writer type provides the implementation of a producer of kafka messages
+// The Writer type provides the implementation of a producer of gxkafka messages
 // that automatically distributes messages across partitions of a single topic
 // using a configurable balancing policy.
 //
@@ -34,7 +34,7 @@ type Writer struct {
 // WriterConfig is a configuration type used to create new instances of Writer.
 type WriterConfig struct {
 	// The list of brokers used to discover the partitions available on the
-	// kafka cluster.
+	// gxkafka cluster.
 	//
 	// This field is required, attempting to create a writer with an empty list
 	// of brokers will panic.
@@ -46,7 +46,7 @@ type WriterConfig struct {
 	// will panic.
 	Topic string
 
-	// The dialer used by the writer to establish connections to the kafka
+	// The dialer used by the writer to establish connections to the gxkafka
 	// cluster.
 	//
 	// If nil, the default dialer is used instead.
@@ -74,7 +74,7 @@ type WriterConfig struct {
 	BatchSize int
 
 	// Time limit on how often incomplete message batches will be flushed to
-	// kafka.
+	// gxkafka.
 	//
 	// The default is to flush at least every second.
 	BatchTimeout time.Duration
@@ -90,7 +90,7 @@ type WriterConfig struct {
 	WriteTimeout time.Duration
 
 	// This interval defines how often the list of partitions is refreshed from
-	// kafka. It allows the writer to automatically handle when new partitions
+	// gxkafka. It allows the writer to automatically handle when new partitions
 	// are added to a topic.
 	//
 	// The default is to refresh partitions every 15 seconds.
@@ -104,7 +104,7 @@ type WriterConfig struct {
 	// Setting this flag to true causes the WriteMessages method to never block.
 	// It also means that errors are ignored since the caller will not receive
 	// the returned value. Use this only if you don't care about guarantees of
-	// whether the messages were written to kafka.
+	// whether the messages were written to gxkafka.
 	Async bool
 
 	// CompressionCodec set the codec to be used to compress Kafka messages.
@@ -120,34 +120,36 @@ type WriterConfig struct {
 	ErrorLogger *log.Logger
 
 	newPartitionWriter func(partition int, config WriterConfig, stats *writerStats) partitionWriter
+
+	SyncResultCallBack func(msg Message, err error)
 }
 
 // WriterStats is a data structure returned by a call to Writer.Stats that
 // exposes details about the behavior of the writer.
 type WriterStats struct {
-	Dials      int64 `metric:"kafka.writer.dial.count"      type:"counter"`
-	Writes     int64 `metric:"kafka.writer.write.count"     type:"counter"`
-	Messages   int64 `metric:"kafka.writer.message.count"   type:"counter"`
-	Bytes      int64 `metric:"kafka.writer.message.bytes"   type:"counter"`
-	Rebalances int64 `metric:"kafka.writer.rebalance.count" type:"counter"`
-	Errors     int64 `metric:"kafka.writer.error.count"     type:"counter"`
+	Dials      int64 `metric:"gxkafka.writer.dial.count"      type:"counter"`
+	Writes     int64 `metric:"gxkafka.writer.write.count"     type:"counter"`
+	Messages   int64 `metric:"gxkafka.writer.message.count"   type:"counter"`
+	Bytes      int64 `metric:"gxkafka.writer.message.bytes"   type:"counter"`
+	Rebalances int64 `metric:"gxkafka.writer.rebalance.count" type:"counter"`
+	Errors     int64 `metric:"gxkafka.writer.error.count"     type:"counter"`
 
-	DialTime  DurationStats `metric:"kafka.writer.dial.seconds"`
-	WriteTime DurationStats `metric:"kafka.writer.write.seconds"`
-	WaitTime  DurationStats `metric:"kafka.writer.wait.seconds"`
-	Retries   SummaryStats  `metric:"kafka.writer.retries.count"`
-	BatchSize SummaryStats  `metric:"kafka.writer.batch.size"`
+	DialTime  DurationStats `metric:"gxkafka.writer.dial.seconds"`
+	WriteTime DurationStats `metric:"gxkafka.writer.write.seconds"`
+	WaitTime  DurationStats `metric:"gxkafka.writer.wait.seconds"`
+	Retries   SummaryStats  `metric:"gxkafka.writer.retries.count"`
+	BatchSize SummaryStats  `metric:"gxkafka.writer.batch.size"`
 
-	MaxAttempts       int64         `metric:"kafka.writer.attempts.max"       type:"gauge"`
-	MaxBatchSize      int64         `metric:"kafka.writer.batch.max"          type:"gauge"`
-	BatchTimeout      time.Duration `metric:"kafka.writer.batch.timeout"      type:"gauge"`
-	ReadTimeout       time.Duration `metric:"kafka.writer.read.timeout"       type:"gauge"`
-	WriteTimeout      time.Duration `metric:"kafka.writer.write.timeout"      type:"gauge"`
-	RebalanceInterval time.Duration `metric:"kafka.writer.rebalance.interval" type:"gauge"`
-	RequiredAcks      int64         `metric:"kafka.writer.acks.required"      type:"gauge"`
-	Async             bool          `metric:"kafka.writer.async"              type:"gauge"`
-	QueueLength       int64         `metric:"kafka.writer.queue.length"       type:"gauge"`
-	QueueCapacity     int64         `metric:"kafka.writer.queue.capacity"     type:"gauge"`
+	MaxAttempts       int64         `metric:"gxkafka.writer.attempts.max"       type:"gauge"`
+	MaxBatchSize      int64         `metric:"gxkafka.writer.batch.max"          type:"gauge"`
+	BatchTimeout      time.Duration `metric:"gxkafka.writer.batch.timeout"      type:"gauge"`
+	ReadTimeout       time.Duration `metric:"gxkafka.writer.read.timeout"       type:"gauge"`
+	WriteTimeout      time.Duration `metric:"gxkafka.writer.write.timeout"      type:"gauge"`
+	RebalanceInterval time.Duration `metric:"gxkafka.writer.rebalance.interval" type:"gauge"`
+	RequiredAcks      int64         `metric:"gxkafka.writer.acks.required"      type:"gauge"`
+	Async             bool          `metric:"gxkafka.writer.async"              type:"gauge"`
+	QueueLength       int64         `metric:"gxkafka.writer.queue.length"       type:"gauge"`
+	QueueCapacity     int64         `metric:"gxkafka.writer.queue.capacity"     type:"gauge"`
 
 	ClientID string `tag:"client_id"`
 	Topic    string `tag:"topic"`
@@ -175,11 +177,11 @@ type writerStats struct {
 // NewWriter creates and returns a new Writer configured with config.
 func NewWriter(config WriterConfig) *Writer {
 	if len(config.Brokers) == 0 {
-		panic("cannot create a kafka writer with an empty list of brokers")
+		panic("cannot create a gxkafka writer with an empty list of brokers")
 	}
 
 	if len(config.Topic) == 0 {
-		panic("cannot create a kafka writer with an empty topic")
+		panic("cannot create a gxkafka writer with an empty topic")
 	}
 
 	if config.Dialer == nil {
@@ -241,7 +243,7 @@ func NewWriter(config WriterConfig) *Writer {
 	return w
 }
 
-// WriteMessages writes a batch of messages to the kafka topic configured on this
+// WriteMessages writes a batch of messages to the gxkafka topic configured on this
 // writer.
 //
 // Unless the writer was configured to write messages asynchronously, the method
@@ -253,7 +255,7 @@ func NewWriter(config WriterConfig) *Writer {
 //
 // The context passed as first argument may also be used to asynchronously
 // cancel the operation. Note that in this case there are no guarantees made on
-// whether messages were written to kafka. The program should assume that the
+// whether messages were written to gxkafka. The program should assume that the
 // whole batch failed and re-write the messages later (which could then cause
 // duplicates).
 func (w *Writer) WriteMessages(ctx context.Context, msgs ...Message) error {
@@ -345,7 +347,7 @@ func (w *Writer) WriteMessages(ctx context.Context, msgs ...Message) error {
 // time.
 //
 // A typical use of this method is to spawn a goroutine that will periodically
-// call Stats on a kafka writer and report the metrics to a stats collection
+// call Stats on a gxkafka writer and report the metrics to a stats collection
 // system.
 func (w *Writer) Stats() WriterStats {
 	return WriterStats{
@@ -519,6 +521,7 @@ type writer struct {
 	codec        CompressionCodec
 	logger       *log.Logger
 	errorLogger  *log.Logger
+	syncProduceCallback func(smg Message, err error)
 }
 
 func newWriter(partition int, config WriterConfig, stats *writerStats) *writer {
@@ -536,6 +539,7 @@ func newWriter(partition int, config WriterConfig, stats *writerStats) *writer {
 		codec:        config.CompressionCodec,
 		logger:       config.Logger,
 		errorLogger:  config.ErrorLogger,
+		syncProduceCallback: config.SyncResultCallBack,
 	}
 	w.join.Add(1)
 	go w.run()
@@ -615,13 +619,15 @@ func (w *writer) run() {
 				}
 			}
 
+			for i := range resch {
+				resch[i] = nil
+			}
+
 			for i := range batch {
 				batch[i] = Message{}
 			}
 
-			for i := range resch {
-				resch[i] = nil
-			}
+
 
 			batch = batch[:0]
 			resch = resch[:0]
@@ -649,9 +655,13 @@ func (w *writer) write(conn *Conn, batch []Message, resch [](chan<- error)) (ret
 		if conn, err = w.dial(); err != nil {
 			w.stats.errors.observe(1)
 			w.withErrorLogger(func(logger *log.Logger) {
-				logger.Printf("error dialing kafka brokers for topic %s (partition %d): %s", w.topic, w.partition, err)
+				logger.Printf("error dialing gxkafka brokers for topic %s (partition %d): %s", w.topic, w.partition, err)
 			})
 			for i, res := range resch {
+				if nil != w.syncProduceCallback {
+					w.syncProduceCallback(batch[i], err)
+				}
+
 				res <- &writerError{msg: batch[i], err: err}
 			}
 			return
@@ -667,10 +677,18 @@ func (w *writer) write(conn *Conn, batch []Message, resch [](chan<- error)) (ret
 			logger.Printf("error writing messages to %s (partition %d): %s", w.topic, w.partition, err)
 		})
 		for i, res := range resch {
+			if nil != w.syncProduceCallback {
+				w.syncProduceCallback(batch[i], err)
+			}
+
 			res <- &writerError{msg: batch[i], err: err}
 		}
 	} else {
 		for _, m := range batch {
+			if nil != w.syncProduceCallback {
+				w.syncProduceCallback(m, nil)
+			}
+
 			w.stats.messages.observe(1)
 			w.stats.bytes.observe(int64(len(m.Key) + len(m.Value)))
 		}

@@ -15,11 +15,11 @@ import (
 )
 
 var (
-	errInvalidWriteTopic     = errors.New("writes must NOT set Topic on kafka.Message")
-	errInvalidWritePartition = errors.New("writes must NOT set Partition on kafka.Message")
+	errInvalidWriteTopic     = errors.New("writes must NOT set Topic on gxkafka.Message")
+	errInvalidWritePartition = errors.New("writes must NOT set Partition on gxkafka.Message")
 )
 
-// Broker carries the metadata associated with a kafka broker.
+// Broker carries the metadata associated with a gxkafka broker.
 type Broker struct {
 	Host string
 	Port int
@@ -27,7 +27,7 @@ type Broker struct {
 	Rack string
 }
 
-// Partition carries the metadata associated with a kafka partition.
+// Partition carries the metadata associated with a gxkafka partition.
 type Partition struct {
 	Topic    string
 	Leader   Broker
@@ -36,7 +36,7 @@ type Partition struct {
 	ID       int
 }
 
-// Conn represents a connection to a kafka broker.
+// Conn represents a connection to a gxkafka broker.
 //
 // Instances of Conn are safe to use concurrently from multiple goroutines.
 type Conn struct {
@@ -81,7 +81,7 @@ type ConnConfig struct {
 }
 
 var (
-	// DefaultClientID is the default value used as ClientID of kafka
+	// DefaultClientID is the default value used as ClientID of gxkafka
 	// connections.
 	DefaultClientID string
 )
@@ -89,10 +89,10 @@ var (
 func init() {
 	progname := filepath.Base(os.Args[0])
 	hostname, _ := os.Hostname()
-	DefaultClientID = fmt.Sprintf("%s@%s (github.com/segmentio/kafka-go)", progname, hostname)
+	DefaultClientID = fmt.Sprintf("%s@%s (github.com/segmentio/gxkafka-go)", progname, hostname)
 }
 
-// NewConn returns a new kafka connection for the given topic and partition.
+// NewConn returns a new gxkafka connection for the given topic and partition.
 func NewConn(conn net.Conn, topic string, partition int) *Conn {
 	return NewConnWith(conn, ConnConfig{
 		Topic:     topic,
@@ -100,7 +100,7 @@ func NewConn(conn net.Conn, topic string, partition int) *Conn {
 	})
 }
 
-// NewConnWith returns a new kafka connection configured with config.
+// NewConnWith returns a new gxkafka connection configured with config.
 // The offset is initialized to FirstOffset.
 func NewConnWith(conn net.Conn, config ConnConfig) *Conn {
 	if len(config.ClientID) == 0 {
@@ -391,7 +391,7 @@ func (c *Conn) syncGroups(request syncGroupRequestV0) (syncGroupResponseV0, erro
 	return response, nil
 }
 
-// Close closes the kafka connection.
+// Close closes the gxkafka connection.
 func (c *Conn) Close() error {
 	return c.conn.Close()
 }
@@ -562,7 +562,7 @@ func (c *Conn) ReadMessage(maxBytes int) (Message, error) {
 	return msg, coalesceErrors(silentEOF(err), batch.Close())
 }
 
-// ReadBatch reads a batch of messages from the kafka server. The method always
+// ReadBatch reads a batch of messages from the gxkafka server. The method always
 // returns a non-nil Batch value. If an error occurred, either sending the fetch
 // request or reading the response, the error will be made available by the
 // returned value of  the batch's Close method.
@@ -574,19 +574,19 @@ func (c *Conn) ReadMessage(maxBytes int) (Message, error) {
 //
 // A program doesn't specify the number of messages in wants from a batch, but
 // gives the minimum and maximum number of bytes that it wants to receive from
-// the kafka server.
+// the gxkafka server.
 func (c *Conn) ReadBatch(minBytes, maxBytes int) *Batch {
 	var adjustedDeadline time.Time
 	var maxFetch = int(c.fetchMaxBytes)
 
 	if minBytes < 0 || minBytes > maxFetch {
-		return &Batch{err: fmt.Errorf("kafka.(*Conn).ReadBatch: minBytes of %d out of [1,%d] bounds", minBytes, maxFetch)}
+		return &Batch{err: fmt.Errorf("gxkafka.(*Conn).ReadBatch: minBytes of %d out of [1,%d] bounds", minBytes, maxFetch)}
 	}
 	if maxBytes < 0 || maxBytes > maxFetch {
-		return &Batch{err: fmt.Errorf("kafka.(*Conn).ReadBatch: maxBytes of %d out of [1,%d] bounds", maxBytes, maxFetch)}
+		return &Batch{err: fmt.Errorf("gxkafka.(*Conn).ReadBatch: maxBytes of %d out of [1,%d] bounds", maxBytes, maxFetch)}
 	}
 	if minBytes > maxBytes {
-		return &Batch{err: fmt.Errorf("kafka.(*Conn).ReadBatch: minBytes (%d) > maxBytes (%d)", minBytes, maxBytes)}
+		return &Batch{err: fmt.Errorf("gxkafka.(*Conn).ReadBatch: minBytes (%d) > maxBytes (%d)", minBytes, maxBytes)}
 	}
 
 	offset, err := c.Seek(c.Offset())
@@ -654,7 +654,7 @@ func (c *Conn) ReadLastOffset() (int64, error) {
 // the connection.
 func (c *Conn) ReadOffsets() (first, last int64, err error) {
 	// We have to submit two different requests to fetch the first and last
-	// offsets because kafka refuses requests that ask for multiple offsets
+	// offsets because gxkafka refuses requests that ask for multiple offsets
 	// on the same topic and partition.
 	if first, err = c.ReadFirstOffset(); err != nil {
 		return
@@ -704,7 +704,7 @@ func (c *Conn) readOffset(t int64) (offset int64, err error) {
 // topics.
 //
 // If the method is called with no topic, it uses the topic configured on the
-// connection. If there are none, the method fetches all partitions of the kafka
+// connection. If there are none, the method fetches all partitions of the gxkafka
 // cluster.
 func (c *Conn) ReadPartitions(topics ...string) (partitions []Partition, err error) {
 	defaultTopics := [...]string{c.topic}
@@ -765,7 +765,7 @@ func (c *Conn) ReadPartitions(topics ...string) (partitions []Partition, err err
 	return
 }
 
-// Write writes a message to the kafka broker that this connection was
+// Write writes a message to the gxkafka broker that this connection was
 // established to. The method returns the number of bytes written, or an error
 // if something went wrong.
 //
@@ -798,7 +798,7 @@ func (c *Conn) WriteCompressedMessages(codec CompressionCodec, msgs ...Message) 
 	n := 0
 	for i, msg := range msgs {
 		// users may believe they can set the Topic and/or Partition
-		// on the kafka message.
+		// on the gxkafka message.
 		if msg.Topic != "" && msg.Topic != c.topic {
 			return 0, errInvalidWriteTopic
 		}
@@ -1013,7 +1013,7 @@ func (c *Conn) requestHeader(apiKey apiKey, apiVersion apiVersion, correlationID
 }
 
 // connDeadline is a helper type to implement read/write deadline management on
-// the kafka connection.
+// the gxkafka connection.
 type connDeadline struct {
 	mutex sync.Mutex
 	value time.Time

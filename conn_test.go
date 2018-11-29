@@ -20,7 +20,7 @@ func (*timeout) Temporary() bool { return true }
 func (*timeout) Timeout() bool   { return true }
 
 // connPipe is an adapter that implements the net.Conn interface on top of
-// two client kafka connections to pass the nettest.TestConn test suite.
+// two client gxkafka connections to pass the nettest.TestConn test suite.
 type connPipe struct {
 	rconn *Conn
 	wconn *Conn
@@ -52,7 +52,7 @@ func (c *connPipe) Read(b []byte) (int, error) {
 func (c *connPipe) Write(b []byte) (int, error) {
 	// The nettest/ConcurrentMethods test spawns a bunch of goroutines that do
 	// random stuff on the connection, if a Read or Write was issued before a
-	// deadline was set then it could cancel an inflight request to kafka,
+	// deadline was set then it could cancel an inflight request to gxkafka,
 	// resulting in the connection being closed.
 	// To prevent this from happening we wait a little while to give the other
 	// goroutines a chance to start and set the deadline.
@@ -95,11 +95,11 @@ func init() {
 }
 
 func makeTopic() string {
-	return fmt.Sprintf("kafka-go-%016x", rand.Int63())
+	return fmt.Sprintf("gxkafka-go-%016x", rand.Int63())
 }
 
 func makeGroupID() string {
-	return fmt.Sprintf("kafka-go-group-%016x", rand.Int63())
+	return fmt.Sprintf("gxkafka-go-group-%016x", rand.Int63())
 }
 
 func TestConn(t *testing.T) {
@@ -120,12 +120,12 @@ func TestConn(t *testing.T) {
 		},
 
 		{
-			scenario: "write a single message to kafka should succeed",
+			scenario: "write a single message to gxkafka should succeed",
 			function: testConnWrite,
 		},
 
 		{
-			scenario: "writing a message to a closed kafka connection should fail",
+			scenario: "writing a message to a closed gxkafka connection should fail",
 			function: testConnCloseAndWrite,
 		},
 
@@ -259,7 +259,7 @@ func TestConn(t *testing.T) {
 				Resolver: &net.Resolver{},
 			}).DialLeader(ctx, tcp, kafka, topic, 0)
 			if err != nil {
-				t.Fatal("failed to open a new kafka connection:", err)
+				t.Fatal("failed to open a new gxkafka connection:", err)
 			}
 			defer conn.Close()
 			testFunc(t, conn)
@@ -494,8 +494,8 @@ func testConnReadWatermarkFromBatch(t *testing.T, conn *Conn) {
 }
 
 func waitForCoordinator(t *testing.T, conn *Conn, groupID string) {
-	// ensure that kafka has allocated a group coordinator.  oddly, issue doesn't
-	// appear to happen if the kafka been running for a while.
+	// ensure that gxkafka has allocated a group coordinator.  oddly, issue doesn't
+	// appear to happen if the gxkafka been running for a while.
 	const maxAttempts = 20
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		_, err := conn.findCoordinator(findCoordinatorRequestV0{

@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// The Dialer type mirrors the net.Dialer API but is designed to open kafka
+// The Dialer type mirrors the net.Dialer API but is designed to open gxkafka
 // connections instead of raw network connections.
 type Dialer struct {
 	// Unique identifier for client connections established by this Dialer.
@@ -107,7 +107,7 @@ func (d *Dialer) DialContext(ctx context.Context, network string, address string
 // connection will end up being established to, because the dialer will lookup
 // the partition leader for the topic and return a connection to that server.
 // The original address is only used as a mechanism to discover the
-// configuration of the kafka cluster that we're connecting to.
+// configuration of the gxkafka cluster that we're connecting to.
 func (d *Dialer) DialLeader(ctx context.Context, network string, address string, topic string, partition int) (*Conn, error) {
 	p, err := d.LookupPartition(ctx, network, address, topic, partition)
 	if err != nil {
@@ -132,7 +132,7 @@ func (d *Dialer) DialPartition(ctx context.Context, network string, address stri
 	}), nil
 }
 
-// LookupLeader searches for the kafka broker that is the leader of the
+// LookupLeader searches for the gxkafka broker that is the leader of the
 // partition for a given topic, returning a Broker value representing it.
 func (d *Dialer) LookupLeader(ctx context.Context, network string, address string, topic string, partition int) (Broker, error) {
 	p, err := d.LookupPartition(ctx, network, address, topic, partition)
@@ -308,7 +308,7 @@ func LookupPartitions(ctx context.Context, network string, address string, topic
 }
 
 // The Resolver interface is used as an abstraction to provide service discovery
-// of the hosts of a kafka cluster.
+// of the hosts of a gxkafka cluster.
 type Resolver interface {
 	// LookupHost looks up the given host using the local resolver.
 	// It returns a slice of that host's addresses.

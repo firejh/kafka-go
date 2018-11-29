@@ -290,15 +290,15 @@ func readFetchResponseHeader(r *bufio.Reader, size int) (throttle int32, waterma
 		return
 	}
 
-	// This error should never trigger, unless there's a bug in the kafka client
+	// This error should never trigger, unless there's a bug in the gxkafka client
 	// or server.
 	if n != 1 {
-		err = fmt.Errorf("1 kafka topic was expected in the fetch response but the client received %d", n)
+		err = fmt.Errorf("1 gxkafka topic was expected in the fetch response but the client received %d", n)
 		return
 	}
 
 	// We ignore the topic name because we've requests messages for a single
-	// topic, unless there's a bug in the kafka server we will have received
+	// topic, unless there's a bug in the gxkafka server we will have received
 	// the name of the topic that we requested.
 	if remain, err = discardString(r, remain); err != nil {
 		return
@@ -308,10 +308,10 @@ func readFetchResponseHeader(r *bufio.Reader, size int) (throttle int32, waterma
 		return
 	}
 
-	// This error should never trigger, unless there's a bug in the kafka client
+	// This error should never trigger, unless there's a bug in the gxkafka client
 	// or server.
 	if n != 1 {
-		err = fmt.Errorf("1 kafka partition was expected in the fetch response but the client received %d", n)
+		err = fmt.Errorf("1 gxkafka partition was expected in the fetch response but the client received %d", n)
 		return
 	}
 
@@ -324,7 +324,7 @@ func readFetchResponseHeader(r *bufio.Reader, size int) (throttle int32, waterma
 		return
 	}
 
-	// This error should never trigger, unless there's a bug in the kafka client
+	// This error should never trigger, unless there's a bug in the gxkafka client
 	// or server.
 	if remain != int(p.MessageSetSize) {
 		err = fmt.Errorf("the size of the message set in a fetch response doesn't match the number of remaining bytes (message set size = %d, remaining bytes = %d)", p.MessageSetSize, remain)
@@ -345,8 +345,8 @@ func readMessageHeader(r *bufio.Reader, sz int) (offset int64, attributes int8, 
 	// On discarding the message size and CRC:
 	// ---------------------------------------
 	//
-	// - Not sure why kafka gives the message size here, we already have the
-	// number of remaining bytes in the response and kafka should only truncate
+	// - Not sure why gxkafka gives the message size here, we already have the
+	// number of remaining bytes in the response and gxkafka should only truncate
 	// the trailing message.
 	//
 	// - TCP is already taking care of ensuring data integrity, no need to

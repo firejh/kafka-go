@@ -111,7 +111,7 @@ func write(w *bufio.Writer, a interface{}) {
 
 // The functions bellow are used as optimizations to avoid dynamic memory
 // allocations that occur when building the data structures representing the
-// kafka protocol requests.
+// gxkafka protocol requests.
 
 func writeFetchRequestV2(w *bufio.Writer, correlationID int32, clientID, topic string, partition int32, offset int64, minBytes, maxBytes int, maxWait time.Duration) error {
 	h := requestHeader{
@@ -261,7 +261,7 @@ func compress(codec CompressionCodec, msgs ...Message) ([]Message, error) {
 	return []Message{{Value: compressed}}, nil
 }
 
-const magicByte = 1 // compatible with kafka 0.10.0.0+
+const magicByte = 1 // compatible with gxkafka 0.10.0.0+
 
 func writeMessage(w *bufio.Writer, offset int64, attributes int8, time time.Time, key, value []byte) {
 	timestamp := timestamp(time)

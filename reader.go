@@ -34,7 +34,7 @@ var (
 
 const (
 	// defaultProtocolType holds the default protocol type documented in the
-	// kafka protocol
+	// gxkafka protocol
 	//
 	// See https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-GroupMembershipAPI
 	defaultProtocolType = "consumer"
@@ -56,13 +56,13 @@ const (
 	defaultRebalanceTimeout = 30 * time.Second
 
 	// defaultRetentionTime holds the length of time a the consumer group will be
-	// saved by kafka
+	// saved by gxkafka
 	defaultRetentionTime = time.Hour * 24
 )
 
-// Reader provides a high-level API for consuming messages from kafka.
+// Reader provides a high-level API for consuming messages from gxkafka.
 //
-// A Reader automatically manages reconnections to a kafka server, and
+// A Reader automatically manages reconnections to a gxkafka server, and
 // blocking methods have context support for asynchronous cancellations.
 type Reader struct {
 	// immutable fields of the reader
@@ -283,7 +283,7 @@ func (r *Reader) leaveGroup(conn *Conn) error {
 // Returns GroupMemberAssignments is this Reader was selected as
 // the leader.  Otherwise, GroupMemberAssignments will be nil.
 //
-// Possible kafka error codes returned:
+// Possible gxkafka error codes returned:
 //  * GroupLoadInProgress:
 //  * GroupCoordinatorNotAvailable:
 //  * NotCoordinatorForGroup:
@@ -401,7 +401,7 @@ func (r *Reader) makeSyncGroupRequestV0(memberAssignments GroupMemberAssignments
 // memberAssignments (if this Reader is the leader) and returning this
 // Readers subscriptions topic => partitions
 //
-// Possible kafka error codes returned:
+// Possible gxkafka error codes returned:
 //  * GroupCoordinatorNotAvailable:
 //  * NotCoordinatorForGroup:
 //  * IllegalGeneration:
@@ -849,7 +849,7 @@ func (r *Reader) run() {
 // ReaderConfig is a configuration object used to create new instances of
 // Reader.
 type ReaderConfig struct {
-	// The list of broker addresses used to connect to the kafka cluster.
+	// The list of broker addresses used to connect to the gxkafka cluster.
 	Brokers []string
 
 	// GroupID holds the optional consumer group id.  If GroupID is specified, then
@@ -863,7 +863,7 @@ type ReaderConfig struct {
 	// be assigned, but not both
 	Partition int
 
-	// An dialer used to open connections to the kafka server. This field is
+	// An dialer used to open connections to the gxkafka server. This field is
 	// optional, if nil, the default dialer is used instead.
 	Dialer *Dialer
 
@@ -871,12 +871,12 @@ type ReaderConfig struct {
 	// set.
 	QueueCapacity int
 
-	// Min and max number of bytes to fetch from kafka in each request.
+	// Min and max number of bytes to fetch from gxkafka in each request.
 	MinBytes int
 	MaxBytes int
 
 	// Maximum amount of time to wait for new data to come when fetching batches
-	// of messages from kafka.
+	// of messages from gxkafka.
 	MaxWait time.Duration
 
 	// ReadLagInterval sets the frequency at which the reader lag is updated.
@@ -917,7 +917,7 @@ type ReaderConfig struct {
 	SessionTimeout time.Duration
 
 	// RebalanceTimeout optionally sets the length of time the coordinator will wait
-	// for members to join as part of a rebalance.  For kafka servers under higher
+	// for members to join as part of a rebalance.  For gxkafka servers under higher
 	// load, it may be useful to set this value higher.
 	//
 	// Default: 30s
@@ -945,27 +945,27 @@ type ReaderConfig struct {
 // ReaderStats is a data structure returned by a call to Reader.Stats that exposes
 // details about the behavior of the reader.
 type ReaderStats struct {
-	Dials      int64 `metric:"kafka.reader.dial.count"      type:"counter"`
+	Dials      int64 `metric:"gxkafka.reader.dial.count"      type:"counter"`
 	Fetches    int64 `metric:"kafak.reader.fetch.count"     type:"counter"` // typo here, but I'm reluctant to fix it
-	Messages   int64 `metric:"kafka.reader.message.count"   type:"counter"`
-	Bytes      int64 `metric:"kafka.reader.message.bytes"   type:"counter"`
-	Rebalances int64 `metric:"kafka.reader.rebalance.count" type:"counter"`
-	Timeouts   int64 `metric:"kafka.reader.timeout.count"   type:"counter"`
-	Errors     int64 `metric:"kafka.reader.error.count"     type:"counter"`
+	Messages   int64 `metric:"gxkafka.reader.message.count"   type:"counter"`
+	Bytes      int64 `metric:"gxkafka.reader.message.bytes"   type:"counter"`
+	Rebalances int64 `metric:"gxkafka.reader.rebalance.count" type:"counter"`
+	Timeouts   int64 `metric:"gxkafka.reader.timeout.count"   type:"counter"`
+	Errors     int64 `metric:"gxkafka.reader.error.count"     type:"counter"`
 
-	DialTime   DurationStats `metric:"kafka.reader.dial.seconds"`
-	ReadTime   DurationStats `metric:"kafka.reader.read.seconds"`
-	WaitTime   DurationStats `metric:"kafka.reader.wait.seconds"`
-	FetchSize  SummaryStats  `metric:"kafka.reader.fetch.size"`
-	FetchBytes SummaryStats  `metric:"kafka.reader.fetch.bytes"`
+	DialTime   DurationStats `metric:"gxkafka.reader.dial.seconds"`
+	ReadTime   DurationStats `metric:"gxkafka.reader.read.seconds"`
+	WaitTime   DurationStats `metric:"gxkafka.reader.wait.seconds"`
+	FetchSize  SummaryStats  `metric:"gxkafka.reader.fetch.size"`
+	FetchBytes SummaryStats  `metric:"gxkafka.reader.fetch.bytes"`
 
-	Offset        int64         `metric:"kafka.reader.offset"          type:"gauge"`
-	Lag           int64         `metric:"kafka.reader.lag"             type:"gauge"`
-	MinBytes      int64         `metric:"kafka.reader.fetch_bytes.min" type:"gauge"`
-	MaxBytes      int64         `metric:"kafka.reader.fetch_bytes.max" type:"gauge"`
-	MaxWait       time.Duration `metric:"kafka.reader.fetch_wait.max"  type:"gauge"`
-	QueueLength   int64         `metric:"kafka.reader.queue.length"    type:"gauge"`
-	QueueCapacity int64         `metric:"kafka.reader.queue.capacity"  type:"gauge"`
+	Offset        int64         `metric:"gxkafka.reader.offset"          type:"gauge"`
+	Lag           int64         `metric:"gxkafka.reader.lag"             type:"gauge"`
+	MinBytes      int64         `metric:"gxkafka.reader.fetch_bytes.min" type:"gauge"`
+	MaxBytes      int64         `metric:"gxkafka.reader.fetch_bytes.max" type:"gauge"`
+	MaxWait       time.Duration `metric:"gxkafka.reader.fetch_wait.max"  type:"gauge"`
+	QueueLength   int64         `metric:"gxkafka.reader.queue.length"    type:"gauge"`
+	QueueCapacity int64         `metric:"gxkafka.reader.queue.capacity"  type:"gauge"`
 
 	ClientID  string `tag:"client_id"`
 	Topic     string `tag:"topic"`
@@ -995,11 +995,11 @@ type readerStats struct {
 // The offset is initialized to FirstOffset.
 func NewReader(config ReaderConfig) *Reader {
 	if len(config.Brokers) == 0 {
-		panic("cannot create a new kafka reader with an empty list of broker addresses")
+		panic("cannot create a new gxkafka reader with an empty list of broker addresses")
 	}
 
 	if len(config.Topic) == 0 {
-		panic("cannot create a new kafka reader with an empty topic")
+		panic("cannot create a new gxkafka reader with an empty topic")
 	}
 
 	if config.Partition < 0 || config.Partition >= math.MaxInt32 {
@@ -1376,7 +1376,7 @@ func (r *Reader) Offset() int64 {
 	offset := r.offset
 	r.mutex.Unlock()
 	r.withLogger(func(log *log.Logger) {
-		log.Printf("looking up offset of kafka reader for partition %d of %s: %d", r.config.Partition, r.config.Topic, offset)
+		log.Printf("looking up offset of gxkafka reader for partition %d of %s: %d", r.config.Partition, r.config.Topic, offset)
 	})
 	return offset
 }
@@ -1414,7 +1414,7 @@ func (r *Reader) SetOffset(offset int64) error {
 		err = io.ErrClosedPipe
 	} else if offset != r.offset {
 		r.withLogger(func(log *log.Logger) {
-			log.Printf("setting the offset of the kafka reader for partition %d of %s from %d to %d",
+			log.Printf("setting the offset of the gxkafka reader for partition %d of %s from %d to %d",
 				r.config.Partition, r.config.Topic, r.offset, offset)
 		})
 		r.offset = offset
@@ -1435,7 +1435,7 @@ func (r *Reader) SetOffset(offset int64) error {
 // time.
 //
 // A typical use of this method is to spawn a goroutine that will periodically
-// call Stats on a kafka reader and report the metrics to a stats collection
+// call Stats on a gxkafka reader and report the metrics to a stats collection
 // system.
 func (r *Reader) Stats() ReaderStats {
 	return ReaderStats{
@@ -1500,7 +1500,7 @@ func (r *Reader) readLag(ctx context.Context) {
 		if err != nil {
 			r.stats.errors.observe(1)
 			r.withErrorLogger(func(log *log.Logger) {
-				log.Printf("kafka reader failed to read lag of partition %d of %s", r.config.Partition, r.config.Topic)
+				log.Printf("gxkafka reader failed to read lag of partition %d of %s", r.config.Partition, r.config.Topic)
 			})
 		} else {
 			r.stats.lag.observe(lag)
@@ -1549,7 +1549,7 @@ func (r *Reader) start(offsetsByPartition map[int]int64) {
 	}
 }
 
-// A reader reads messages from kafka and produces them on its channels, it's
+// A reader reads messages from gxkafka and produces them on its channels, it's
 // used as an way to asynchronously fetch messages while the main program reads
 // them using the high level reader API.
 type reader struct {
@@ -1582,7 +1582,7 @@ func (r *reader) run(ctx context.Context, offset int64) {
 	// and will keep attempting to reader messages otherwise.
 	//
 	// Retrying indefinitely has the nice side effect of preventing Read calls
-	// on the parent reader to block if connection to the kafka server fails,
+	// on the parent reader to block if connection to the gxkafka server fails,
 	// the reader keeps reporting errors on the error channel which will then
 	// be surfaced to the program.
 	// If the reader wasn't retrying then the program would block indefinitely
@@ -1595,7 +1595,7 @@ func (r *reader) run(ctx context.Context, offset int64) {
 		}
 
 		r.withLogger(func(log *log.Logger) {
-			log.Printf("initializing kafka reader for partition %d of %s starting at offset %d", r.partition, r.topic, offset)
+			log.Printf("initializing gxkafka reader for partition %d of %s starting at offset %d", r.partition, r.topic, offset)
 		})
 
 		conn, start, err := r.initialize(ctx, offset)
@@ -1606,19 +1606,19 @@ func (r *reader) run(ctx context.Context, offset int64) {
 			// offset on the partition leader. In that case we're just going
 			// to retry later hoping that enough data has been produced.
 			r.withErrorLogger(func(log *log.Logger) {
-				log.Printf("error initializing the kafka reader for partition %d of %s: %s", r.partition, r.topic, OffsetOutOfRange)
+				log.Printf("error initializing the gxkafka reader for partition %d of %s: %s", r.partition, r.topic, OffsetOutOfRange)
 			})
 			continue
 		default:
 			// Wait 4 attempts before reporting the first errors, this helps
-			// mitigate situations where the kafka server is temporarily
+			// mitigate situations where the gxkafka server is temporarily
 			// unavailable.
 			if attempt >= 3 {
 				r.sendError(ctx, err)
 			} else {
 				r.stats.errors.observe(1)
 				r.withErrorLogger(func(log *log.Logger) {
-					log.Printf("error initializing the kafka reader for partition %d of %s: %s", r.partition, r.topic, err)
+					log.Printf("error initializing the gxkafka reader for partition %d of %s: %s", r.partition, r.topic, err)
 				})
 			}
 			continue
@@ -1658,10 +1658,10 @@ func (r *reader) run(ctx context.Context, offset int64) {
 				break readLoop
 
 			case RequestTimedOut:
-				// Timeout on the kafka side, this can be safely retried.
+				// Timeout on the gxkafka side, this can be safely retried.
 				errcount = 0
 				r.withErrorLogger(func(log *log.Logger) {
-					log.Printf("no messages received from kafka within the allocated time for partition %d of %s at offset %d", r.partition, r.topic, offset)
+					log.Printf("no messages received from gxkafka within the allocated time for partition %d of %s at offset %d", r.partition, r.topic, offset)
 				})
 				r.stats.timeouts.observe(1)
 				continue
@@ -1671,7 +1671,7 @@ func (r *reader) run(ctx context.Context, offset int64) {
 
 				if err != nil {
 					r.withErrorLogger(func(log *log.Logger) {
-						log.Printf("the kafka reader got an error while attempting to determine whether it was reading before the first offset or after the last offset of partition %d of %s: %s", r.partition, r.topic, err)
+						log.Printf("the gxkafka reader got an error while attempting to determine whether it was reading before the first offset or after the last offset of partition %d of %s: %s", r.partition, r.topic, err)
 					})
 					conn.Close()
 					break readLoop
@@ -1680,7 +1680,7 @@ func (r *reader) run(ctx context.Context, offset int64) {
 				switch {
 				case offset < first:
 					r.withErrorLogger(func(log *log.Logger) {
-						log.Printf("the kafka reader is reading before the first offset for partition %d of %s, skipping from offset %d to %d (%d messages)", r.partition, r.topic, offset, first, first-offset)
+						log.Printf("the gxkafka reader is reading before the first offset for partition %d of %s, skipping from offset %d to %d (%d messages)", r.partition, r.topic, offset, first, first-offset)
 					})
 					offset, errcount = first, 0
 					continue // retry immediately so we don't keep falling behind due to the backoff
@@ -1692,7 +1692,7 @@ func (r *reader) run(ctx context.Context, offset int64) {
 				default:
 					// We may be reading past the last offset, will retry later.
 					r.withErrorLogger(func(log *log.Logger) {
-						log.Printf("the kafka reader is reading passed the last offset for partition %d of %s at offset %d", r.partition, r.topic, offset)
+						log.Printf("the gxkafka reader is reading passed the last offset for partition %d of %s at offset %d", r.partition, r.topic, offset)
 					})
 				}
 
@@ -1706,7 +1706,7 @@ func (r *reader) run(ctx context.Context, offset int64) {
 					r.sendError(ctx, err)
 				} else {
 					r.withErrorLogger(func(log *log.Logger) {
-						log.Printf("the kafka reader got an unknown error reading partition %d of %s at offset %d: %s", r.partition, r.topic, offset, err)
+						log.Printf("the gxkafka reader got an unknown error reading partition %d of %s at offset %d: %s", r.partition, r.topic, offset, err)
 					})
 					r.stats.errors.observe(1)
 					conn.Close()
@@ -1752,7 +1752,7 @@ func (r *reader) initialize(ctx context.Context, offset int64) (conn *Conn, star
 		}
 
 		r.withLogger(func(log *log.Logger) {
-			log.Printf("the kafka reader for partition %d of %s is seeking to offset %d", r.partition, r.topic, offset)
+			log.Printf("the gxkafka reader for partition %d of %s is seeking to offset %d", r.partition, r.topic, offset)
 		})
 
 		if start, err = conn.Seek(offset, SeekAbsolute); err != nil {

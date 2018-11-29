@@ -39,7 +39,7 @@ func TestReader(t *testing.T) {
 		},
 
 		{
-			scenario: "calling Lag returns the lag of the last message read from kafka",
+			scenario: "calling Lag returns the lag of the last message read from gxkafka",
 			function: testReaderLag,
 		},
 
@@ -392,7 +392,7 @@ func testReaderSetsTopicAndPartition(t *testing.T, ctx context.Context, r *Reade
 // reading to time out by attempting to read beyond the current response.  This
 // test is not perfect, but it is pretty reliable about reproducing the issue.
 //
-// NOTE : it currently only succeeds against kafka 0.10.1.0, so it will be
+// NOTE : it currently only succeeds against gxkafka 0.10.1.0, so it will be
 // skipped.  It's here so that it can be manually run.
 func TestReadTruncatedMessages(t *testing.T) {
 	// todo : it would be great to get it to work against 0.11.0.0 so we could
@@ -1133,7 +1133,7 @@ func testReaderConsumerGroupRebalanceAcrossTopics(t *testing.T, ctx context.Cont
 func testReaderConsumerGroupRebalanceAcrossManyPartitionsAndConsumers(t *testing.T, ctx context.Context, r *Reader) {
 	// I've rebalanced up to 100 servers, but the rebalance can take upwards
 	// of a minute and that seems too long for unit tests.  Also, setting this
-	// to a larger number seems to make the kafka broker unresponsive.
+	// to a larger number seems to make the gxkafka broker unresponsive.
 	// TODO research if there's a way to reduce rebalance time across many partitions
 	const N = 8
 

@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// A Batch is an iterator over a sequence of messages fetched from a kafka
+// A Batch is an iterator over a sequence of messages fetched from a gxkafka
 // server.
 //
 // Batches are created by calling (*Conn).ReadBatch. They hold a internal lock
@@ -30,7 +30,7 @@ type Batch struct {
 	err           error
 }
 
-// Throttle gives the throttling duration applied by the kafka server on the
+// Throttle gives the throttling duration applied by the gxkafka server on the
 // connection.
 func (batch *Batch) Throttle() time.Duration {
 	return batch.throttle
@@ -183,7 +183,7 @@ func (batch *Batch) readMessage(
 	case nil:
 		batch.offset = offset + 1
 	case errShortRead:
-		// As an "optimization" kafka truncates the returned response after
+		// As an "optimization" gxkafka truncates the returned response after
 		// producing MaxBytes, which could then cause the code to return
 		// errShortRead.
 		err = batch.msgs.discard()

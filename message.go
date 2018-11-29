@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Message is a data structure representing kafka messages.
+// Message is a data structure representing gxkafka messages.
 type Message struct {
 	// Topic is reads only and MUST NOT be set when writing messages
 	Topic string
@@ -189,7 +189,7 @@ func (r *messageSetReader) readMessage(min int64,
 		// base will be zero otherwise.
 		offset += r.base
 
-		// When the messages are compressed kafka may return messages at an
+		// When the messages are compressed gxkafka may return messages at an
 		// earlier offset than the one that was requested, it's the client's
 		// responsibility to ignore those.
 		if offset < min {

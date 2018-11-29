@@ -69,7 +69,7 @@ type TopicConfig struct {
 	// ReplicationFactor for the topic. -1 indicates unset.
 	ReplicationFactor int
 
-	// ReplicaAssignments among kafka brokers for this topic partitions. If this
+	// ReplicaAssignments among gxkafka brokers for this topic partitions. If this
 	// is set num_partitions and replication_factor must be unset.
 	ReplicaAssignments []ReplicaAssignment
 
@@ -110,7 +110,7 @@ type createTopicsRequestV0Topic struct {
 	// ReplicationFactor for the topic. -1 indicates unset.
 	ReplicationFactor int16
 
-	// ReplicaAssignments among kafka brokers for this topic partitions. If this
+	// ReplicaAssignments among gxkafka brokers for this topic partitions. If this
 	// is set num_partitions and replication_factor must be unset.
 	ReplicaAssignments []createTopicsRequestV0ReplicaAssignment
 

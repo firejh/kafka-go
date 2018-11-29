@@ -9,7 +9,7 @@ import (
 
 // The Balancer interface provides an abstraction of the message distribution
 // logic used by Writer instances to route messages to the partitions available
-// on a kafka cluster.
+// on a gxkafka cluster.
 //
 // Instances of Balancer do not have to be safe to use concurrently by multiple
 // goroutines, the Writer implementation ensures that calls to Balance are
@@ -21,7 +21,7 @@ type Balancer interface {
 	// An application should refrain from using a balancer to manage multiple
 	// sets of partitions (from different topics for examples), use one balancer
 	// instance for each partition set, so the balancer can detect when the
-	// partitions change and assume that the kafka topic has been rebalanced.
+	// partitions change and assume that the gxkafka topic has been rebalanced.
 	Balance(msg Message, partitions ...int) (partition int)
 }
 
@@ -127,7 +127,7 @@ var (
 // 		hasher.Sum32() % len(partitions) => partition
 //
 // By default, Hash uses the FNV-1a algorithm.  This is the same algorithm used
-// by the Sarama Producer and ensures that messages produced by kafka-go will
+// by the Sarama Producer and ensures that messages produced by gxkafka-go will
 // be delivered to the same topics that the Sarama producer would be delivered to
 type Hash struct {
 	rr     RoundRobin

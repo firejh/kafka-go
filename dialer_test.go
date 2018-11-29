@@ -186,7 +186,7 @@ func TestDialerTLS(t *testing.T) {
 	w.Close()
 
 	// Create an SSL proxy using the tls.Config that connects to the
-	// docker-composed kafka
+	// docker-composed gxkafka
 	config := tlsConfig(t)
 	l, err := tls.Listen("tcp", "127.0.0.1:", config)
 	if err != nil {

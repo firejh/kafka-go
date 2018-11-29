@@ -31,12 +31,12 @@ func NewCompressionCodecWith(level int) CompressionCodec {
 	}
 }
 
-// Code implements the kafka.CompressionCodec interface.
+// Code implements the gxkafka.CompressionCodec interface.
 func (c CompressionCodec) Code() int8 {
 	return Code
 }
 
-// Encode implements the kafka.CompressionCodec interface.
+// Encode implements the gxkafka.CompressionCodec interface.
 func (c CompressionCodec) Encode(src []byte) ([]byte, error) {
 	buf := bytes.Buffer{}
 	buf.Grow(len(src)) // guess a size to avoid repeat allocations.
@@ -54,7 +54,7 @@ func (c CompressionCodec) Encode(src []byte) ([]byte, error) {
 	return buf.Bytes(), err
 }
 
-// Decode implements the kafka.CompressionCodec interface.
+// Decode implements the gxkafka.CompressionCodec interface.
 func (c CompressionCodec) Decode(src []byte) ([]byte, error) {
 	reader, err := gzip.NewReader(bytes.NewReader(src))
 	if err != nil {
